@@ -1,4 +1,4 @@
-# SmartWaste
+# BinTra
 
 Full-stack garbage collection, tracking and recycling platform built with the MERN stack
 (MongoDB, Express, React, Node.js). Citizens book a pickup, a truck with enough capacity
