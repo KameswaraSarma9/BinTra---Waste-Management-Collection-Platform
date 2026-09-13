@@ -4,8 +4,9 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   "http://localhost:5050";
 
+// Automatically use /api for every backend request
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_URL.replace(/\/$/, "")}/api`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -21,9 +22,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
