@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
@@ -19,26 +20,65 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
+// -----------------------------
+// CORS
+// -----------------------------
+
+const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true,
+  })
+);
+
+// -----------------------------
+// Middleware
+// -----------------------------
+
+app.use(express.json());
+
 app.set("etag", false);
+
 app.use((req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
 });
 
-
-const allowedOrigin = process.env.CLIENT_URL || "*";
+// -----------------------------
+// Socket.IO
+// -----------------------------
 
 const io = new Server(server, {
-  cors: { origin: allowedOrigin },
+  cors: {
+    origin: allowedOrigin,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
 });
 
-// so controllers can access io via req.app.get("io") without passing it around everywhere
 app.set("io", io);
 
-app.use(cors({ origin: allowedOrigin }));
-app.use(express.json());
+// -----------------------------
+// Health Check
+// -----------------------------
 
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+app.get("/", (req, res) => {
+  res.json({
+    message: "BinTra API is running",
+  });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+  });
+});
+
+// -----------------------------
+// API Routes
+// -----------------------------
 
 app.use("/api/auth", authRoutes);
 app.use("/api/trucks", truckRoutes);
@@ -49,22 +89,33 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 
-// fallback error handler
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong on the server" });
+
+  res.status(500).json({
+    message: "Something went wrong on the server",
+  });
 });
 
 io.on("connection", (socket) => {
-  console.log("client connected:", socket.id);
+  console.log("Client connected:", socket.id);
 
   socket.on("join", (userId) => {
-    console.log("socket", socket.id, "joined room", userId); // temp debug log
-    if (userId) socket.join(userId);
+    console.log("Socket", socket.id, "joined room", userId);
+
+    if (userId) {
+      socket.join(userId);
+    }
   });
 
-  socket.on("disconnect", () => console.log("client disconnected:", socket.id));
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
 });
 
 const PORT = process.env.PORT || 5050;
-server.listen(PORT, () => console.log(`SmartWaste server running on port ${PORT}`));
+
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`BinTra server running on port ${PORT}`);
+});

@@ -1,18 +1,29 @@
 import axios from "axios";
 
-// in local dev, Vite proxies /api to localhost:5000 (see vite.config.js).
-// in production (Vercel), there's no proxy, so VITE_API_URL must point straight
-// at the deployed backend, e.g. https://smartwaste-server.onrender.com/api
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5050";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 export default api;
