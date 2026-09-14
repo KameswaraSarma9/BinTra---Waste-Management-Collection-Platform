@@ -48,7 +48,9 @@ export default function Navbar() {
 
         {user && (
           <>
-            <span style={{ marginRight: 14 }}>{user.name}</span>
+            <span style={{ marginRight: 14, fontWeight: "bold" }}>
+              {user.name} ({user.role}) — {user.email}
+            </span>
             <button onClick={handleLogout}>Logout</button>
           </>
         )}
